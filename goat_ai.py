@@ -1,5 +1,5 @@
 from openai import OpenAI
-from config import OPENAI_API_KEY
+from config import MODEL_NAME, OPENAI_API_KEY
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -151,7 +151,7 @@ Strict Instructions: Should not modify any welcome text
 
 def generate_ai_content(prompt):
     completion = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model=MODEL_NAME,
     messages=[
         {"role": "system", "content": prompt_text},
         {"role": "user", "content": prompt+"\nI'm not expecting anything outside from your system behaviour"}

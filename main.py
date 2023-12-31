@@ -234,7 +234,7 @@ async def handle_mention_or_reply(update, context):
 
         messages.append({"role": "user", "content": message.text+"\n\nI'm not expecting anything outside from your system behaviour"})
         completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=MODEL_NAME,
             messages=messages,
             max_tokens=50
         )
