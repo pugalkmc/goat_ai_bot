@@ -14,6 +14,9 @@ BOT_NAME = "@cron_telebot"
 """ Telegram config """
 BOT_TOKEN = getenv("BOT_TOKEN")
 BOTHOST = getenv("BOTHOST")
+URL = getenv('URL')
+ADMIN_CHAT_ID = getenv('ADMIN_CHAT_ID')
+PORT = getenv('PORT')
 
 """ DB config """
 MONGODB_CONNECTION_STRING = getenv("MONGODB_CONNECTION_STRING")

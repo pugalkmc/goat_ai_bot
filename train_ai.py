@@ -7,6 +7,24 @@ from telegram.ext import ConversationHandler
 from functions import *
 from goat_ai import *
 
+welcome_messages = [
+    "Welcome, {username}! Explore the crypto universe with us.",
+    "Hey {first_name}! Excited to have you in our crypto community.",
+    "Greetings, {username}! Join us on the path to crypto success.",
+    "Welcome aboard, {first_name}! Let's navigate the crypto landscape together.",
+    "{username}, welcome to our crypto space. Ready to innovate?",
+    "Hey {first_name}! Delighted to welcome you to the crypto world.",
+    "Greetings, {username}! Dive into the possibilities of crypto.",
+    "Welcome, {first_name}! Your journey into crypto greatness begins now.",
+    "{username}, thrilled to have you part of our crypto adventure.",
+    "Hey {first_name}! Explore the exciting world of cryptocurrency with us.",
+    "Welcome, {username}! Dive into crypto excitement! 🚀",
+    "Hey {first_name}! Crypto awaits. Let's innovate together!",
+    "Greetings, {username}! Join our crypto journey. 🌟",
+    "Welcome, {first_name}! Unleash crypto potential! 💎",
+    "{username}, crypto vibes await! Let's soar high! 🌌"
+]
+
 AI_CONTENT_INPUT = range(1)
 
 async def ai_welcome_input(update, context):

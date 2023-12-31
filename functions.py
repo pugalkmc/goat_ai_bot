@@ -1,16 +1,10 @@
-import asyncio
-import re
 import datetime
 from pymongo import MongoClient
-import telegram
 from goat_ai import generate_ai_content
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 import config
 
-
-BOT_TOKEN = config.BOT_TOKEN
-
-bot = Bot(BOT_TOKEN)
+bot = Bot(config.BOT_TOKEN)
 time_fun = datetime.datetime
 
 mongo_client = MongoClient(config.MONGODB_CONNECTION_STRING)

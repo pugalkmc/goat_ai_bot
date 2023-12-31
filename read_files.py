@@ -6,14 +6,11 @@ from bs4 import BeautifulSoup
 
 def get_text_from_website(url):
     try:
-        # Send a GET request to the URL
         response = requests.get(url)
-        response.raise_for_status()  # Check for errors in the request
+        response.raise_for_status()
 
-        # Parse the HTML content of the page
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Extract text from all the paragraphs on the page
         paragraphs = soup.find_all('p')
         text_content = '\n'.join([p.get_text() for p in paragraphs])
 
