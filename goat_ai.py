@@ -155,7 +155,8 @@ def generate_ai_content(prompt):
     messages=[
         {"role": "system", "content": prompt_text},
         {"role": "user", "content": prompt+"\nI'm not expecting anything outside from your system behaviour"}
-    ]
+    ],
+    max_tokens=40
     )
 
     return completion.choices[0].message.content
