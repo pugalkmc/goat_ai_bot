@@ -398,7 +398,7 @@ async def main() -> None:
 
 
     # Pass webhook settings to telegram
-    await dp.bot.set_webhook(url=f"{URL}telegram", allowed_updates=Update.ALL_TYPES)
+    await dp.bot.set_webhook(url=f"{URL}/telegram", allowed_updates=Update.ALL_TYPES)
 
     # Set up webserver
     flask_app = Flask(__name__)
@@ -436,7 +436,7 @@ async def main() -> None:
             app=WsgiToAsgi(flask_app),
             port=PORT,
             use_colors=False,
-            host="http://goataibot-gykt-service",
+            host="ccdns.co",
         )
     )
 
