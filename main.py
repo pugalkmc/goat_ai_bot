@@ -397,8 +397,8 @@ async def main() -> None:
     dp.add_handler(CommandHandler('settings',settings))
 
 
-        # Pass webhook settings to telegram
-    await dp.bot.set_webhook(url=f"{URL}/telegram", allowed_updates=Update.ALL_TYPES)
+    # Pass webhook settings to telegram
+    await dp.bot.set_webhook(url=f"{URL}telegram", allowed_updates=Update.ALL_TYPES)
 
     # Set up webserver
     flask_app = Flask(__name__)
@@ -408,6 +408,7 @@ async def main() -> None:
         """Handle incoming Telegram updates by putting them into the `update_queue`"""
         await dp.update_queue.put(Update.de_json(data=request.json, bot=dp.bot))
         return jsonify({"status": "OK"})
+    
     @flask_app.route("/submitpayload", methods=["GET", "POST"])  # type: ignore[misc]
 
     async def custom_updates() -> Response:
