@@ -153,8 +153,7 @@ def generate_ai_content(prompt):
     completion = client.chat.completions.create(
     model=MODEL_NAME,
     messages=[
-        {"role": "system", "content": prompt_text},
-        {"role": "user", "content": prompt+"\nI'm not expecting anything outside from your system behaviour"}
+        {"role": "user", "content": prompt"}
     ],
     max_tokens=40
     )
