@@ -436,7 +436,7 @@ async def main() -> None:
             app=WsgiToAsgi(flask_app),
             port=PORT,
             use_colors=False,
-            host="ccdns.co",
+            host="0.0.0.0",
         )
     )
 
