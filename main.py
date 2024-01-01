@@ -172,9 +172,9 @@ async def error(update, context):
 
 async def update_admin_list(update, context):
     chat_id = update.message.chat_id
-    check = await bot.get_chat_member(chat_id, bot.id).status
+    check = await bot.get_chat_member(chat_id, bot.id)
     try:
-        if check in ['administrator', 'creator']:
+        if check.status in ['administrator', 'creator']:
             pass
         else:
             await update.message.reply_text("I don't have admin permission to check admins info")
