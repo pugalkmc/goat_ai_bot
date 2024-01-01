@@ -25,6 +25,7 @@ async def select_welcome_type(update, context):
         context.user_data['default_welcome'] = res['default_welcome']
         context.user_data['custom_welcome'] = res['custom_welcome']
         context.user_data['ai_welcome'] = res['ai_welcome']
+        context.user_data['group_title'] = res['group_title']
     
     text = f"I have the capability to welcome the users by sharing them a small info about your project\n\n" \
            f"Welcome methods for {context.user_data['group_title']} are:\n"

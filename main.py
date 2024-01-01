@@ -163,10 +163,6 @@ async def chat_assistance_settings(update, context):
         )
     await update.message.reply_text(text="Chat Assistance is Coming Soon!")
 
-# async def new_member(update, context):
-#     chat = update.effective_chat
-#     user = update.effective_user
-#     await bot.send_message(chat_id=chat.id, text=random.choice(["hello"]).format(user=user.mention_markdown(), group_name=chat.title))
 
 
 async def error(update, context):
