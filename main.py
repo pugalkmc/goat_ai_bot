@@ -315,6 +315,8 @@ async def new_member(update, context):
 
 async def main() -> None:
 
+    await bot.initialize()
+
     """Set up PTB application and a web application for handling the incoming requests."""
     context_types = ContextTypes(context=CustomContext)
     # Here we set updater to None because we want our custom webhook server to handle the updates
@@ -322,6 +324,8 @@ async def main() -> None:
     dp = (
         Application.builder().token(BOT_TOKEN).updater(None).context_types(context_types).build()
     )
+
+    await dp.initialize()
     
     # register handlers
     dp.add_handler(CommandHandler("start", start))
