@@ -3,8 +3,6 @@ from dataclasses import dataclass
 import html
 import random
 import datetime
-import re
-from bson import Int64
 from fastapi import Response
 from flask import Flask, jsonify, make_response, request
 from asgiref.wsgi import WsgiToAsgi
@@ -32,7 +30,6 @@ from http import HTTPStatus
 from telegram.constants import ParseMode
 import uvicorn
 from goat_ai import generate_ai_content
-from schedules import delete_message, schedule_task
 from welcome_conversation import *
 from functions import messages_col
 from config import *
@@ -84,7 +81,7 @@ async def webhook_update(update: WebhookUpdate, context: CustomContext) -> None:
         f"The user {chat_member.user.mention_html()} has sent a new payload. "
         f"So far they have sent the following payloads: \n\n• <code>{combined_payloads}</code>"
     )
-    await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(text=text, parse_mode=ParseMode.HTML)
 
 
 async def start_web(update: Update, context: CustomContext) -> None:
@@ -101,7 +98,9 @@ async def start_web(update: Update, context: CustomContext) -> None:
 async def settings(update, context):
     if update.message:
         if 'chat_id' not in context.user_data:
-            return await start(update, context)
+            group_col.find_one({'chat_id':int(update.message.text)})
+            context.user_data.clear()
+            context.user_data['chat_id'] = group_col['chat_id']
     else:
         context.user_data['chat_id'] = update.callback_query.data
     keyboard = [
@@ -114,7 +113,6 @@ async def settings(update, context):
         text=f"Choose below option:",
         reply_markup=reply_markup,
     )
-
 
 # Your existing handlers
 async def start(update, context):
@@ -133,10 +131,9 @@ async def start(update, context):
     }))
 
     if not groups_as_admin:
-        await bot.send_message(
-            chat_id=chat_id,
+        await update.message.reply_text(
             text="There are no groups founded you as admin\n" \
-                f"Also ensure that @GoatAssistantBot is also an admin in there\n\n" \
+                f"Also ensure that @goat_ai_bot is also an admin in there\n\n" \
                 f"Still not found? : Try using /reload command on the group and use /start in this chat"
         )
         return
@@ -146,30 +143,25 @@ async def start(update, context):
         keyboard.append([InlineKeyboardButton(groups_as_admin[i]['group_title'], callback_data=groups_as_admin[i]['chat_id'])])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await bot.send_message(
-        chat_id=chat_id,
+    await update.message.reply_text(
         text=f"Select the group you wanted to change the settings and my behaviour to act\n\n",
         reply_markup=reply_markup,
     )
 
 
 async def generate_text(update, context):
-    message = update.message
-    chat_id = message.chat_id
-    value = generate_ai_content(message.text)
-    await bot.send_message(chat_id=chat_id, text=value)
+    await update.message.reply_text(text=generate_ai_content(update.message.text))
 
 async def chat_assistance_settings(update, context):
-    chat_id = update.message.chat_id
     group_col.update_one(
-        {"chat_id": chat_id},
+        {"chat_id": update.message.chat_id},
             {
                 "$set": {
                     "ai_welcome": not context.user_data['ai_welcome']
                 }
             }
         )
-    await bot.send_message(chat_id=update.message.chat_id, text="Chat Assistance is Coming Soon!")
+    await update.message.reply_text(text="Chat Assistance is Coming Soon!")
 
 # async def new_member(update, context):
 #     chat = update.effective_chat
@@ -183,47 +175,37 @@ async def error(update, context):
 
 async def update_admin_list(update, context):
     chat_id = update.message.chat_id
-    bot = context.bot
 
     try:
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-        if bot_member.status in ['administrator', 'creator']:
+        if await bot.get_chat_member(chat_id, bot.id).status in ['administrator', 'creator']:
             pass
         else:
-            update.message.reply_text("I don't have admin permission to check admins info")
+            await update.message.reply_text("I don't have admin permission to check admins info")
     except Exception as e:
-        update.message.reply_text("I don't have admin permission to check admins info")
+        await update.message.reply_text("I don't have admin permission to check admins info")
         return
 
     members_count = await bot.get_chat_member_count(chat_id)
     admins = await bot.get_chat_administrators(chat_id)
-    admin_list = [admin.user.id for admin in admins]
     group_col.update_one(
             {"chat_id": chat_id},
                 {
                     "$set": {
                         "latest_admin_list_updated": datetime.datetime.now(),
-                        "admin_list": admin_list,
+                        "admin_list": [admin.user.id for admin in admins],
                         'members_count': members_count,
                     }
             }
         )
-    await bot.send_message(chat_id=chat_id, text="Admin list updated!")
+    await update.message.reply_text(text="Admin list updated!")
 
 
 async def handle_mention_or_reply(update, context):
     message = update.message
 
-    # Extract message details
-    message_id = message.message_id
-    user_id = message.from_user.id
-    chat_id = message.chat_id
-    text = message.text
-    timestamp = message.date
-
     # Check if the bot is mentioned in the message or the message is a reply to the bot's message
     if message.text and (f"@{context.bot.username}" in message.text or message.reply_to_message and message.reply_to_message.from_user.id == context.bot.id):
-        last_10_messages = list(messages_col.find({"user_id": user_id}).sort("_id", pymongo.DESCENDING).limit(20))
+        last_10_messages = list(messages_col.find({"user_id": message.from_user.id}).sort("_id", pymongo.DESCENDING).limit(20))
         # Store message details in MongoDB
         messages=[
             {"role": "system", "content": prompt_text},
@@ -235,20 +217,19 @@ async def handle_mention_or_reply(update, context):
         messages.append({"role": "user", "content": message.text+"\n\nI'm not expecting anything outside from your system behaviour"})
         completion = client.chat.completions.create(
             model=MODEL_NAME,
-            messages=messages,
-            max_tokens=50
+            messages=messages
         )
 
         response = completion.choices[0].message.content
 
 
         messages_col.insert_one({
-            'message_id': message_id,
-            'user_id': user_id,
-            'chat_id': chat_id,
+            'message_id': message.message_id,
+            'user_id': message.from_user.id,
+            'chat_id': message.chat_id,
             'text': message.text,
             'assistant': response,
-            'timestamp': timestamp,
+            'timestamp':  message.date,
         })
 
         await message.reply_text(response)
@@ -270,51 +251,60 @@ async def new_member(update, context):
     username = user.username
     first_name = user.first_name
     last_name = user.last_name
-    new_members = update.message.new_chat_members
-    for member in new_members:
+    for member in update.message.new_chat_members:
         if member.is_bot and member.id == context.bot.id:
-            chat_id = update.effective_chat.id
-            group_id = update.effective_chat.id  # Same as chat_id for groups
-            group_title = update.effective_chat.title
-    
-            # Get the current time in Indian Kolkata time zone
-            indian_kolkata_time = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
-
-
             # Store the data in your database or perform any other actions
             # Example: You can use a MongoDB client to store data in MongoDB
-            group_col.insert_one({
-                'group_title': group_title,
-                'chat_id': chat_id,
-                'group_id': group_id,
+            await group_col.insert_one({
+                'group_title': update.effective_chat.title,
+                'chat_id': update.effective_chat.id,
+                'group_id': update.effective_chat.id,
                 'ai_welcome':False,
                 'default_welcome':True,
                 'custom_welcome':False,
                 "content": "nothing",
                 "cost":0,
-                'indian_kolkata_time': indian_kolkata_time,
+                'indian_kolkata_time': datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30))),
                 'latest_admin_list_updated': datetime.datetime.now(),
             })
 
-            await bot.send_message(chat_id=chat_id, text="Hello crypto crew! I'm just joined the voyage")
+            await update.message.reply_text(text="Hello crypto crew! I'm just joined the voyage")
         else:
-            res = group_col.find_one({'chat_id':update.message.chat_id})
-            random_welcome = []
-            if 'custom_welcome' in res and res['custom_welcome']:
-                random_welcome.append('custom_welcome')
-            if 'default_welcome' in res and res['default_welcome']:
-                random_welcome.append('default_welcome')
-            if 'ai_welcome' in res and res['ai_welcome']:
-                random_welcome.append('ai_welcome')
+            pipeline = [
+                {"$match": {'chat_id': update.message.chat_id}},
+                {"$project": {
+                    "true_options": {
+                        "$map": {
+                            "input": {
+                                "$filter": {
+                                    "input": {"$objectToArray": "$$ROOT"},
+                                    "cond": {
+                                        "$and": [
+                                            {"$eq": ["$$this.v", True]},
+                                            {"$in": ["$$this.k", ["custom_welcome", "default_welcome", "ai_welcome"]]}
+                                        ]
+                                    }
+                                }
+                            },
+                            "in": "$$this.k"
+                        }
+                    },
+                    "_id": 0
+                }},
+                {"$project": {
+                    "random_option": {"$arrayElemAt": ["$true_options", {"$floor": {"$multiply": [{"$rand": {}}, {"$size": "$true_options"}]}}]},
+                    "_id": 0
+                }},
+                {"$replaceRoot": {"newRoot": "$random_option"}}
+            ]
 
-            get_random_type = random.choice(random_welcome)
-            if get_random_type == 'custom_welcome':
-                get_random_text = random.choice(res['custom_welcome_list'])
-            elif get_random_type == 'ai_welcome':
-                get_random_text = random.choice(res['ai_welcome_list'])
-            elif get_random_type == 'default_welcome':
-                get_random_text = random.choice(welcome_messages)
-            await bot.send_message(chat_id=update.effective_chat.id, text=await generate_random_welcome(get_random_text,username=username , first_name=first_name, last_name=last_name))
+            cursor = group_col.aggregate(pipeline)
+            result = list(cursor)
+            if result:
+                await update.message.reply_text(
+                                        text=await generate_random_welcome(result[0],username=username , 
+                                                                          first_name=first_name, 
+                                                                          last_name=last_name))
 
             # **Corrected context usage:**
             # asyncio.create_task(schedule_task(10, delete_message(context)))

@@ -149,13 +149,12 @@ Strict Instructions: Should not modify any welcome text
 """
 
 
-def generate_ai_content(prompt):
+async def generate_ai_content(prompt):
     completion = client.chat.completions.create(
     model=MODEL_NAME,
     messages=[
         {"role": "user", "content": prompt}
-    ],
-    max_tokens=40
+    ]
     )
 
     return completion.choices[0].message.content

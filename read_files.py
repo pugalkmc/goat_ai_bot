@@ -1,10 +1,9 @@
 import PyPDF2
-import re
 import requests
 from bs4 import BeautifulSoup
 
 
-def get_text_from_website(url):
+async def get_text_from_website(url):
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -22,7 +21,7 @@ def get_text_from_website(url):
 
 
 
-def read_pdf(file_path):
+async def read_pdf(file_path):
     with open(file_path, 'rb') as file:
         pdf_reader = PyPDF2.PdfFileReader(file)
         num_pages = pdf_reader.numPages

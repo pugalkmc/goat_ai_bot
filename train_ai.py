@@ -31,17 +31,16 @@ async def ai_welcome_input(update, context):
     keyboard = [
         [InlineKeyboardButton("Cancel", callback_data="cancel_input")],
         ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
     if update.message:
         await update.message.reply_text(
             text="Provide content about the project (text, PDF, or website link):",
-            reply_markup=reply_markup
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
     elif update.callback_query:
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             text="Provide content about the project (text, PDF, or website link):",
-            reply_markup=reply_markup
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
     return AI_CONTENT_INPUT
 
@@ -71,11 +70,12 @@ async def get_content(update, context):
                 )
             form_data = completion.choices[0].message.content
             print(form_data)
-            await bot.send_message(chat_id=chat_id, text=f"Content on {text} are saved!\n\n"
-                                   f"{form_data}")
+            await update.message.reply_text(
+                text=f"Content on {text} are saved!\n\n"
+                     f"{form_data}")
             text = form_data
         else:
-            await bot.send_message(chat_id=update.message.chat_id, text="Please enter a valid website link")
+            await update.message.reply_text(text="Please enter a valid website link")
             return AI_CONTENT_INPUT
     else:
         completion = client.chat.completions.create(
@@ -88,12 +88,12 @@ async def get_content(update, context):
         form_data = completion.choices[0].message.content
 
         if form_data == 'True':
-            await bot.send_message(chat_id=chat_id, text="Your provided info are verified by G.O.A.T AI and saved!")
+            await update.message.reply_text(text="Your provided info are verified by G.O.A.T AI and saved!")
             return ConversationHandler.END
         else:
-            await bot.send_message(chat_id=chat_id, text=form_data)
+            await update.message.reply_text(text=form_data)
             return AI_CONTENT_INPUT
-    group_col.update_one({"group_id": -4082239845}, {"$set": {
+    await group_col.update_one({"group_id": -4082239845}, {"$set": {
         'welcome_type':'AI',
         'welcome_text':text
         }})
@@ -105,7 +105,7 @@ async def file_handler(update, context):
  
      # Check if the file has a ".pdf" extension
     if update.message.document and update.message.document.mime_type == 'application/pdf':
-        file = bot.get_file(update.message.document.file_id)
+        file = await bot.get_file(update.message.document.file_id)
         await file.download_to_drive(custom_path='downloaded.pdf')
 
         with open('downloaded.pdf', 'rb') as file:
@@ -115,15 +115,14 @@ async def file_handler(update, context):
                 page = pdf_reader.getPage(page_number)
                 text += page.extractText()
 
-        group_col.update_one({"group_id": -4082239845}, {"$set": {
-            'welcome_type':'AI',
-            'welcome_text':text
+        await group_col.update_one({"group_id": -4082239845}, {"$set": {
+            'content':text
         }})
         # Clean up temporary file
         os.remove('downloaded.pdf')
-        await bot.send_message(chat_id=chat_id, text="File contents saved!")
+        await update.message.reply_text(text="File contents saved!")
     
         return ConversationHandler.END
     else:
-        await bot.send_message(chat_id=chat_id, text="Please send a PDF file.")
+        await update.message.reply_text(text="Please send a PDF file.")
         return AI_CONTENT_INPUT
