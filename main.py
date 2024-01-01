@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import html
 import random
 import datetime
+import time
 from fastapi import Response
 from flask import Flask, jsonify, make_response, request
 from asgiref.wsgi import WsgiToAsgi
@@ -247,6 +248,8 @@ async def new_member(update, context):
     username = user.username
     first_name = user.first_name
     last_name = user.last_name
+    start_time = time.time()  # Mark start time
+
     for member in update.message.new_chat_members:
         if member.is_bot and member.id == context.bot.id:
             # Store the data in your database or perform any other actions
@@ -301,6 +304,8 @@ async def new_member(update, context):
                                         text=await generate_random_welcome(result[0],username=username , 
                                                                           first_name=first_name, 
                                                                           last_name=last_name))
+            print(f"Response time: {time.time() - start_time:.4f} seconds")
+            
 
             # **Corrected context usage:**
             # asyncio.create_task(schedule_task(10, delete_message(context)))
