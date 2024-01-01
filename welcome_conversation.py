@@ -47,7 +47,7 @@ async def default_welcome_message(update, context):
     text = f"I have the capability to welcome the users by sharing them a small info about your project\n\n" \
            f"Welcome methods for {context.user_data['group_title']} are:\n"
     
-    await group_col.update_one(
+    group_col.update_one(
         {"chat_id": int(context.user_data['chat_id'])},
         {
             "$set": {
@@ -152,7 +152,7 @@ async def custom_welcome_input(update, context):
 
 
 async def reset_welcome(update, context):
-    await group_col.update_one(
+    group_col.update_one(
         {'chat_id':int(context.user_data['chat_id'])},  # Add a filter to specify the document to update
         {"$set": {"custom_welcome_list": []}}
     )
