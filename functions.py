@@ -11,7 +11,7 @@ mongo_client = MongoClient(config.MONGODB_CONNECTION_STRING)
 db = mongo_client["goatdb"]
 peoples_col = db["peoples"]
 group_col = db["group_col"]
-messages_col = db['messages_col']
+messages_col = db['message_col']
 
 
 async def menu_button(update, context, text="Choose Options:"):
