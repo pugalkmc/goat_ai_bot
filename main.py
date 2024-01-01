@@ -201,7 +201,7 @@ async def handle_mention_or_reply(update, context):
 
     # Check if the bot is mentioned in the message or the message is a reply to the bot's message
     if message.text and (f"@{context.bot.username}" in message.text or message.reply_to_message and message.reply_to_message.from_user.id == context.bot.id):
-        last_10_messages = list(messages_col.find({"user_id": message.from_user.id}).sort("_id", pymongo.DESCENDING).limit(20))
+        last_10_messages = list(messages_col.find({"user_id": message.from_user.id, "user_id":message.from_user.id}).sort("_id", pymongo.DESCENDING).limit(20))
         # Store message details in MongoDB
         messages=[
             {"role": "system", "content": prompt_text},

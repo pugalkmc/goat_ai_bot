@@ -56,7 +56,7 @@ async def default_welcome_message(update, context):
         },
     )
     
-    context.user_data['default_welcome'] = True
+    context.user_data['default_welcome'] = not context.user_data['default_welcome']
     
     await update.callback_query.edit_message_text(
             text=text,
