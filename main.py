@@ -172,9 +172,9 @@ async def error(update, context):
 
 async def update_admin_list(update, context):
     chat_id = update.message.chat_id
-
+    check = await bot.get_chat_member(chat_id, bot.id).status
     try:
-        if await bot.get_chat_member(chat_id, bot.id).status in ['administrator', 'creator']:
+        if check in ['administrator', 'creator']:
             pass
         else:
             await update.message.reply_text("I don't have admin permission to check admins info")
@@ -212,6 +212,7 @@ async def handle_mention_or_reply(update, context):
             messages.append({"role":"assistant", 'content': last_10_messages[i]['assistant']})
 
         messages.append({"role": "user", "content": message.text+"\n\nI'm not expecting anything outside from your system behaviour"})
+        
         completion = client.chat.completions.create(
             model=MODEL_NAME,
             messages=messages
@@ -254,7 +255,7 @@ async def new_member(update, context):
         if member.is_bot and member.id == context.bot.id:
             # Store the data in your database or perform any other actions
             # Example: You can use a MongoDB client to store data in MongoDB
-            await group_col.insert_one({
+            group_col.insert_one({
                 'group_title': update.effective_chat.title,
                 'chat_id': update.effective_chat.id,
                 'group_id': update.effective_chat.id,

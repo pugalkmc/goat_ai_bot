@@ -93,7 +93,7 @@ async def get_content(update, context):
         else:
             await update.message.reply_text(text=form_data)
             return AI_CONTENT_INPUT
-    await group_col.update_one({"group_id": -4082239845}, {"$set": {
+    group_col.update_one({"group_id": -4082239845}, {"$set": {
         'welcome_type':'AI',
         'welcome_text':text
         }})
@@ -115,7 +115,7 @@ async def file_handler(update, context):
                 page = pdf_reader.getPage(page_number)
                 text += page.extractText()
 
-        await group_col.update_one({"group_id": -4082239845}, {"$set": {
+        group_col.update_one({"group_id": -4082239845}, {"$set": {
             'content':text
         }})
         # Clean up temporary file
